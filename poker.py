@@ -41,7 +41,16 @@ class Card(object):
         return self._suite
 
 
-class CardsDeck(list):
+    def __cmp__(self, other):
+        if self.NUMBERS[self.number] > self.NUMBERS[other.number]:
+            return 1
+        elif self.NUMBERS[self.number] < self.NUMBERS[other.number]:
+            return -1
+        elif self.NUMBERS[self.number] == self.NUMBERS[other.number]:
+            return 0
+
+
+class Deck(list):
     def __init__(self):
         self._unpack()
 
@@ -69,6 +78,10 @@ class WinningHand(object):
 
     def eval(self):
         raise NotImplementedError
+
+
+class PokerEngine(object):
+    pass
 
 
 class HighestCard(WinningHand):
