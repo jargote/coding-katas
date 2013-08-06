@@ -113,8 +113,8 @@ class Game(Visuals):
     FLOP = 1
     TURN = 2
     RIVER = 3
-    CRFA = 5 # Check, Raise, Fold or All-in
     WINNER = 4
+    CRFA = 5 # Check, Raise, Fold or All-in
 
     def __init__(self, n_players, wallet):
         # Game settings.
@@ -127,6 +127,7 @@ class Game(Visuals):
         self._board = CardList()
         self._burnt = CardList()
         self._winning_pot = 0.0
+        self._bet = 0.0
         self._hands_played = 0
 
         # Represents the indexes (players list) of the blinds.
@@ -201,8 +202,6 @@ class Game(Visuals):
             player.take_card(self._deck.draw())
             player.take_card(self._deck.draw())
 
-
-
     def _deal(self, n_to_deal, n_to_burn):
         for n in range(n_to_burn):
             self._burnt.append(self._deck.draw())
@@ -210,11 +209,53 @@ class Game(Visuals):
         for n in range(n_to_deal):
             self._board.append(self._deck.draw())
 
+    def _get_player_options(self, player):
+        # Check, Call, Raise, Fold, All-in
+        options = (True, False, True, False, True)
+        if self._bet:
+            if player.wallet >= self._bet:
+                options = (False, True, True, True, True)
+            elif player.wallet < self._bet:
+                options = (False, False, False, True, False)
+        return options
+
     def _check_raise_fold_allin(self):
         print '\n'
         for n, player in enumerate(self._players):
-            opt = raw_input('Player%s: Check(c), Raise(r), Fold(f), '
-                            'All-in(a)? ' % n)
+            options = self._get_player_options(player)
+            txt = '%s ==> ' % player.name
+            if options[0]:
+                txt += 'Check(c), '
+            if options[1]:
+                txt += 'Call(q), '
+            if options[2]:
+                txt += 'Raise(r), '
+            if options[3]:
+                txt += 'Fold(f), '
+            if options[4]:
+                txt += 'All-in(a)?'
+
+            opt = raw_input(txt)
+            if opt  in 'cC':
+                continue
+            if opt  in 'qQ':
+                continue
+            elif opt  in 'rR':
+                while(True):
+                    bet = float(raw_input('%s($%s) to raise: $' %
+                                          (player.name, player.wallet)))
+                    if bet > player.wallet:
+                        print 'You don\'t have enough credits, ' \
+                              'please type a lower value.'
+                        raw_input('\nPress any key to continue.')
+                    else:
+                        self._bet = float(bet)
+                        break
+            elif opt  in 'fF':
+                pass
+            elif opt  in 'aA':
+                pass
+
 
     def _charge_player(self, player, amount):
         if player.wallet < amount:
